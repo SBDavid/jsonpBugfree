@@ -1,5 +1,5 @@
 {
-  "name": "jsonpBugfree",
+  "name": "jsonp-bugfree",
   "version": "1.0.0",
   "description": "解决了jsonp请求并发时，相同jsonpCallback造成callback is not defined的错误",
   "scripts": {
