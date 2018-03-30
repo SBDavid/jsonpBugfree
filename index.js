@@ -5,28 +5,20 @@
     var root = (typeof self == 'object' && self.self === self && self) ||
         (typeof global == 'object' && global.global === global && global);
 
-    // Set up jsonpBugfree appropriately for the environment. Start with AMD.
-    if (typeof define === 'function' /* && define.amd */) {
-        define(['md5', 'jquery', 'exports'], function (md5, $, exports) {
-            // Export global even in AMD case in case this script is loaded with
-            // others that may still expect a global jsonpBugfree.
-            root.jsonpBugfree = factory(root, exports, md5, $);
-        });
-
-        // Next for Node.js or CommonJS. jQuery may not be needed as a module.
-    } else if (typeof exports !== 'undefined') {
-        var md5 = require('md5'), $;
-        try { $ = require('jquery'); } catch (e) { }
-        factory(root, exports, md5, $);
-
-        // Finally, as a browser global.
+    if (typeof define === 'function' && define.amd) {
+        // AMD
+        define(['md5' ,'jquery'], factory);
+    } else if (typeof exports === 'object') {
+        // Node, CommonJS之类的
+        module.exports = factory(require('md5'), require('jquery'));
     } else {
-        root.jsonpBugfree = factory(root, {}, root.md5, (root.jQuery || root.$));
+        // 浏览器全局变量(root 即 window)
+        root.jsonpBugfree = factory(root.md5, root.jQuery);
     }
 
-})(function (root, jsonpBugfree, md5, $) {
+})(function (md5, $) {
 
-    jsonpBugfree = function() {
+    var myJsonp = function () {
         var self = this;
         // 存储jsonpCallBack
         this.cbObj = {};
@@ -37,8 +29,7 @@
             dataType: 'jsonp',
             cache: true,
             jsonp: 'cb',
-            beforeSend: function(jqXHR, settings ) {
-                console.info('beforeSend', settings);
+            beforeSend: function (jqXHR, settings) {
                 jqXHR.id = settings.id;
                 jqXHR.jsonpkey = settings.jsonpkey;
                 // 如果指定了jsonpCallback
@@ -71,15 +62,14 @@
                     settings['jsonpCallback'] = 'callback' + Math.floor(Math.random() * 100).toString();
                 }
             },
-            complete: function(jqXHR, textStatus) {
-                console.info('complete', textStatus, jqXHR);
+            complete: function (jqXHR, textStatus) {
                 // this.cbObj标记为完成状态
                 self.cbObj[jqXHR.jsonpkey].completed = true;
                 // 触发dfd.then error
                 var jsonpReq = self.jsonpReqQueue[jqXHR.jsonpkey].shift();
-                jqXHR.then(function(){
+                jqXHR.then(function () {
                     jsonpReq.dfd.resolveWith(this, arguments);
-                }).catch(function() {
+                }).catch(function () {
                     jsonpReq.dfd.rejectWith(this, arguments);
                 });
                 // 如果队列里有排队的请求，测取出一个进行发送
@@ -92,32 +82,32 @@
         this.cbCount = 0;
         this.idCount = 0;
     }
-    
-    jsonpBugfree.prototype.cleanJsonpQueue = function(options) {
+
+    myJsonp.prototype.cleanJsonpQueue = function (options) {
         var settings = $.extend({}, this.jsonpOptions, options);
         $.ajax(settings);
     }
-    
-    jsonpBugfree.prototype.JSONP = function(options) {
+
+    myJsonp.prototype.JSONP = function (options) {
         var jsonpkey = md5(JSON.stringify(options));
         var dfd = $.Deferred();
         var id = this.idCount++;
         var completed = false;
-    
+
         options.id = id;
         options.jsonpkey = jsonpkey;
-    
+
         var queue = this.jsonpReqQueue[jsonpkey] ? this.jsonpReqQueue[jsonpkey] : this.jsonpReqQueue[jsonpkey] = [];
         queue.push({
             dfd: dfd,
             options: options
         });
-    
+
         var settings = $.extend({}, this.jsonpOptions, options);
         $.ajax(settings);
-    
+
         return dfd;
     }
 
-    return jsonpBugfree;
+    return myJsonp;
 });
