@@ -32,35 +32,6 @@
             beforeSend: function (jqXHR, settings) {
                 jqXHR.id = settings.id;
                 jqXHR.jsonpkey = settings.jsonpkey;
-                // 如果指定了jsonpCallback
-                if (settings['jsonpCallback'] != undefined && settings['url'] != undefined) {
-                    // 如果url从未出现过，则直接写入cbObj
-                    if (!self.cbObj[settings.jsonpkey]) {
-                        self.cbObj[settings.jsonpkey] = {
-                            cb: settings['jsonpCallback'] + (++self.cbCount),
-                            completed: false
-                        };
-                        settings['jsonpCallback'] = self.cbObj[settings.jsonpkey].cb;
-                    }
-                    // 如果url已经出现过，则判断之前的req是否完成，
-                    // 如果已经完成则直接发送req,
-                    // 如果未完成则取消发送
-                    else {
-                        var previousReq = self.cbObj[settings.jsonpkey];
-                        if (previousReq.completed) {
-                            settings['jsonpCallback'] = previousReq.cb;
-                            previousReq.completed = false;
-                        } else {
-                            // 终止当前请求
-                            console.info('发现并发性的jsonp请求', settings);
-                            return false;
-                        }
-                    }
-                }
-                // 如果没有指定jsonpCallback，则使用随机数
-                else {
-                    settings['jsonpCallback'] = 'callback' + Math.floor(Math.random() * 100).toString();
-                }
             },
             complete: function (jqXHR, textStatus) {
                 // this.cbObj标记为完成状态
@@ -84,27 +55,62 @@
     }
 
     myJsonp.prototype.cleanJsonpQueue = function (options) {
-        var settings = $.extend({}, this.jsonpOptions, options);
-        $.ajax(settings);
+        $.ajax(options);
     }
 
     myJsonp.prototype.JSONP = function (options) {
+        var self = this;
         var jsonpkey = md5(JSON.stringify(options));
         var dfd = $.Deferred();
         var id = this.idCount++;
         var completed = false;
 
-        options.id = id;
-        options.jsonpkey = jsonpkey;
+
+
+        var settings = $.extend({}, this.jsonpOptions, options);
+        
+        settings.id = id;
+        settings.jsonpkey = jsonpkey;
+
+        // 如果指定了jsonpCallback
+        if (settings['jsonpCallback'] != undefined && settings['url'] != undefined) {
+            // 如果url从未出现过，则直接写入cbObj
+            if (!self.cbObj[settings.jsonpkey]) {
+                self.cbObj[settings.jsonpkey] = {
+                    cb: settings['jsonpCallback'] + (++self.cbCount),
+                    completed: false
+                };
+                settings['jsonpCallback'] = self.cbObj[settings.jsonpkey].cb;
+                $.ajax(settings);
+            }
+            // 如果url已经出现过，则判断之前的req是否完成，
+            // 如果已经完成则直接发送req,
+            // 如果未完成则取消发送
+            else {
+                var previousReq = self.cbObj[settings.jsonpkey];
+                if (previousReq.completed) {
+                    settings['jsonpCallback'] = previousReq.cb;
+                    previousReq.completed = false;
+                    $.ajax(settings)
+                } else {
+                    settings['jsonpCallback'] = previousReq.cb;
+                    // 终止当前请求
+                    console.info('发现并发性的jsonp请求', settings);
+                }
+            }
+        }
+        // 如果没有指定jsonpCallback，则使用随机数
+        else {
+            settings['jsonpCallback'] = 'callback' + Math.floor(Math.random() * 100).toString();
+            $.ajax(settings);
+        }
 
         var queue = this.jsonpReqQueue[jsonpkey] ? this.jsonpReqQueue[jsonpkey] : this.jsonpReqQueue[jsonpkey] = [];
         queue.push({
             dfd: dfd,
-            options: options
+            options: settings
         });
 
-        var settings = $.extend({}, this.jsonpOptions, options);
-        $.ajax(settings);
 
         return dfd;
     }
