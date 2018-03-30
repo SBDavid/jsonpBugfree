@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <script src="./lib/md5.js"></script>
+    <script src="./lib/jquery.js"></script>
+    <script src="./src/index.js"></script>
+    <script>
+        var myjsonp = new jsonpBugfree();
+
+        function send(name, src, jsonpCallback) {
+            myjsonp.JSONP({
+                url: 'http://api.v.pptv.com/api/pg_recommend',
+                data: {
+                    from: 'web',
+                    version: 1,
+                    format: 'jsonp',
+                    appplt: 'ik',
+                    appid: 'pptv.web',
+                    src: src, //客户端63 网站71
+                    appver: '1',
+                    num: '18',
+                    ppi: 12344,
+                    userLevel: '0',
+                    vipUser: '0',
+                    uid: 123123123,
+                    extraFields: 'all'
+                },
+                cache: true,
+                dataType: 'jsonp',
+                jsonp: 'cb',
+                jsonpCallback: jsonpCallback,
+                success: function () {
+
+                }
+            })
+                .then(function () {
+                    console.info(name + 'outter then', arguments);
+                })
+                .catch(function () {
+                    console.info(name + 'outter catch', arguments);
+                })
+        }
+
+        send(1, '63', 'pgrecommend');
+        send(2, '63', 'pgrecommend');
+    </script>
+</head>
+
+<body>
+</body>
+
+</html>
