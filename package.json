@@ -1,9 +1,14 @@
 {
   "name": "jsonp-bugfree",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "解决了jsonp请求并发时，相同jsonpCallback造成callback is not defined的错误",
   "scripts": {
     
+  },
+  "repository" :
+  { 
+    "type" : "git",
+    "url" : "https://github.com/SBDavid/jsonpBugfree.git"
   },
   "author": "SBDavid",
   "license": "ISC",
