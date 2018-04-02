@@ -34,19 +34,21 @@
                 jqXHR.jsonpkey = settings.jsonpkey;
             },
             complete: function (jqXHR, textStatus) {
-                // this.cbObj标记为完成状态
-                self.cbObj[jqXHR.jsonpkey].completed = true;
-                // 触发dfd.then error
-                var jsonpReq = self.jsonpReqQueue[jqXHR.jsonpkey].shift();
-                jqXHR.then(function () {
-                    jsonpReq.dfd.resolveWith(this, arguments);
-                }).catch(function () {
-                    jsonpReq.dfd.rejectWith(this, arguments);
-                });
-                // 如果队列里有排队的请求，测取出一个进行发送
-                if (self.jsonpReqQueue[jqXHR.jsonpkey].length > 0) {
-                    var nextReq = self.jsonpReqQueue[jqXHR.jsonpkey][0];
-                    self.cleanJsonpQueue(nextReq.options);
+                if (self.cbObj[jqXHR.jsonpkey]) {
+                    // this.cbObj标记为完成状态
+                    self.cbObj[jqXHR.jsonpkey].completed = true;
+                    // 触发dfd.then error
+                    var jsonpReq = self.jsonpReqQueue[jqXHR.jsonpkey].shift();
+                    jqXHR.then(function () {
+                        jsonpReq.dfd.resolveWith(this, arguments);
+                    }).catch(function () {
+                        jsonpReq.dfd.rejectWith(this, arguments);
+                    });
+                    // 如果队列里有排队的请求，测取出一个进行发送
+                    if (self.jsonpReqQueue[jqXHR.jsonpkey].length > 0) {
+                        var nextReq = self.jsonpReqQueue[jqXHR.jsonpkey][0];
+                        self.cleanJsonpQueue(nextReq.options);
+                    }
                 }
             }
         }
