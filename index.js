@@ -7,7 +7,7 @@
 
     if (typeof define === 'function' && define.amd) {
         // AMD
-        define(['md5' ,'jquery'], factory);
+        define(['md5', 'jquery'], factory);
     } else if (typeof exports === 'object') {
         // Node, CommonJS之类的
         module.exports = factory(require('md5'), require('jquery'));
@@ -70,7 +70,7 @@
 
 
         var settings = $.extend({}, this.jsonpOptions, options);
-        
+
         settings.id = id;
         settings.jsonpkey = jsonpkey;
 
@@ -100,21 +100,22 @@
                     console.info('发现并发性的jsonp请求', settings);
                 }
             }
+
+            var queue = this.jsonpReqQueue[jsonpkey] ? this.jsonpReqQueue[jsonpkey] : this.jsonpReqQueue[jsonpkey] = [];
+            queue.push({
+                dfd: dfd,
+                options: settings
+            });
+
+            return dfd;
         }
         // 如果没有指定jsonpCallback，则使用随机数
         else {
             settings['jsonpCallback'] = 'callback' + Math.floor(Math.random() * 100).toString();
-            $.ajax(settings);
+            delete settings.beforeSend;
+            delete settings.complete;
+            return $.ajax(settings);
         }
-
-        var queue = this.jsonpReqQueue[jsonpkey] ? this.jsonpReqQueue[jsonpkey] : this.jsonpReqQueue[jsonpkey] = [];
-        queue.push({
-            dfd: dfd,
-            options: settings
-        });
-
-
-        return dfd;
     }
 
     return myJsonp;
