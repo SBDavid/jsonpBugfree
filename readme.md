@@ -23,6 +23,9 @@ Uncaught ReferenceError: XXX is not defined
 
 # 2. 如何使用呢？
 
+## 2.0 安装
+npm i jsonp-bugfree
+
 ## 2.1 依赖
 - jquery 这个不用说，依赖$.ajax()方法
 - md5 其实这个不是必须的，使用它的目的是为了判断请求的url和参数是否和其他请求相同。因为url+参数可能是一个非常长的字符串，使用md5可以控制字符长度。如果你不想使用md5也可以使用其他方法代替。
