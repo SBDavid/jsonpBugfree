@@ -1,6 +1,6 @@
 {
   "name": "jsonp-bugfree",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "解决了jsonp请求并发时，相同jsonpCallback造成callback is not defined的错误",
   "scripts": {
     
@@ -17,5 +17,6 @@
     "md5": "^2.2.1"},
   "devDependencies": {
     "webpack": "^3.1.0"
-  }
+  },
+  "keywords": ["jsonp", "parallel", "is not defined"]
 }
