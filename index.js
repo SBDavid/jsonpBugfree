@@ -32,6 +32,8 @@
             beforeSend: function (jqXHR, settings) {
                 jqXHR.id = settings.id;
                 jqXHR.jsonpkey = settings.jsonpkey;
+                var previousReq = self.cbObj[settings.jsonpkey];
+                previousReq.completed = false;
             },
             complete: function (jqXHR, textStatus) {
                 if (self.cbObj[jqXHR.jsonpkey]) {
@@ -40,6 +42,9 @@
                 }
                 // 触发dfd.then error
                 var jsonpReq = self.jsonpReqQueue[jqXHR.jsonpkey].shift();
+                if (jsonpReq) {
+                    console.info(jqXHR, self.jsonpReqQueue)
+                }
                 jqXHR.then(function () {
                     jsonpReq.dfd.resolveWith(this, arguments);
                 }).catch(function () {
@@ -65,7 +70,6 @@
         var jsonpkey = md5(JSON.stringify(options));
         var dfd = $.Deferred();
         var id = this.idCount++;
-        var completed = false;
 
 
 
@@ -92,7 +96,6 @@
                 var previousReq = self.cbObj[settings.jsonpkey];
                 if (previousReq.completed) {
                     settings['jsonpCallback'] = previousReq.cb;
-                    previousReq.completed = false;
                     $.ajax(settings)
                 } else {
                     settings['jsonpCallback'] = previousReq.cb;
